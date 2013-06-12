@@ -8,9 +8,9 @@ shinyUI(pageWithSidebar(
   
   sidebarPanel(
     
-    textInput("entity1", "Entity 1:First Entity's Name or First Term Here; Feel free to replace 'Jacob' with your name 
+    textInput("entity1", "Entity 1:First Entity's Name or First Term Here; Feel free to replace 'Michael' with your name 
               and/or feel free to replace the '#' with '@'", "#Michael"),
-    textInput ("entity2","Entity 2:Please Enter Second Entity's Name or Second Term Here; Feel free to replace 'Sophia' 
+    textInput ("entity2","Entity 2:Please Enter Second Entity's Name or Second Term Here; Feel free to replace 'Mary' 
                with any other name and/or replace the '#' with '@'", "#Mary"),
     sliderInput("maxTweets","Number of recent tweets to use for analysis:",min=5,max=50,value=5), # The max can, of course, be increased
     sliderInput("tweettime","Of the number of tweets retrieved above, let's calculate the proportion of these that arrive within 
