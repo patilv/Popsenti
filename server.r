@@ -18,6 +18,7 @@ PrepareTwitter<-function()
   EnsurePackage("ggplot2")
   EnsurePackage("reshape")
   EnsurePackage("tm")
+  EnsurePackage("RJSONIO")
   EnsurePackage("wordcloud")
   EnsurePackage("gridExtra")
   #EnsurePackage("gplots") Not required... ggplot2 is used
