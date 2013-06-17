@@ -57,7 +57,9 @@ shinyServer(function(input, output) {
   TweetFrame<-function(searchTerm, maxTweets)
   {
     twtList<-searchTwitter(searchTerm,n=maxTweets,cainfo="cacert.pem",lang="en")
-    return(do.call("rbind",lapply(twtList,as.data.frame)))
+    twtList1<- do.call("rbind",lapply(twtList,as.data.frame))
+    twtList1$text<-iconv(twtList1$text, 'UTF-8', 'ASCII') #WILL THIS SOLVE THE UTF ENCODING PROBLEM: http://lists.hexdump.org/pipermail/twitter-users-hexdump.org/2013-May/000335.html
+    return(twtList1)
     
   }
   
