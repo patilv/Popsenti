@@ -8,14 +8,16 @@ shinyUI(pageWithSidebar(
   
   sidebarPanel(
     
+      
     textInput("entity1", "Entity 1:First Entity's Name or First Term Here; Feel free to replace 'Michael' with your name 
               and/or feel free to replace the '#' with '@'", "#Michael"),
     textInput ("entity2","Entity 2:Please Enter Second Entity's Name or Second Term Here; Feel free to replace 'Mary' 
                with any other name and/or replace the '#' with '@'", "#Mary"),
     sliderInput("maxTweets","Number of recent tweets to use for analysis:",min=5,max=50,value=5), # The max can, of course, be increased
     sliderInput("tweettime","Of the number of tweets retrieved above, let's calculate the proportion of these that arrive within 
-                a certain time.  Please specify Time (in seconds)?:",min=30,max=3600,value=30),
+                a certain time.  Please specify Time (in seconds, 30 second intervals)?:",min=30,max=3600,value=30,step=30), #http://rstudio.github.io/shiny/tutorial/#sliders
     submitButton(text="Twitter, who/what is more popular?")
+    
   ),
   
   mainPanel(
@@ -72,9 +74,7 @@ two entities. A higher sentiment score suggests more positive (or a less negativ
       
       #Output from tab 5 - Word clouds - with some html tags
       
-      tabPanel("Entity 1 and Entity 2 Word Clouds",HTML
-               ("<div> <b><u><center>Entity 1</b></u></center></div>"),plotOutput("entity1wcplot"),HTML
-               ("<div> <b><u><center>Entity 2</b></u></center></div>"),plotOutput("entity2wcplot")),
+      tabPanel("Entity 1 and Entity 2 Word Clouds",h2(textOutput("entity1wc")),plotOutput("entity1wcplot"),h2(textOutput("entity2wc")),plotOutput("entity2wcplot")),
       
       #Output from tabs 6 and 7, the raw tweets
       tabPanel("Entity 1 raw tweets",tableOutput("tableentity1")),

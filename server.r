@@ -63,11 +63,11 @@ shinyServer(function(input, output) {
   # function to calculate number of tweets (input is text column, if the entire data frame was submitted, 
   #could've used nrow(), as done at a different place below)
   
-  numoftweets<-function(entity1text,entity2text){
-    ent1tweets<-length(entity1text)
-    ent2tweets<-length(entity2text)
-    notweets<-c(ent1tweets,ent2tweets)
-    names(notweets)<-c("Entity 1","Entity 2")
+  numoftweets<-function(entity1,entity2,entity1entry,entity2entry){
+    ent1numtweets<-nrow(entity1)
+    ent2numtweets<-nrow(entity2)
+    notweets<-c(ent1numtweets,ent2numtweets)
+    names(notweets)<-c(entity1entry,entity2entry)
     notweets
   } 
   
@@ -95,7 +95,7 @@ shinyServer(function(input, output) {
   #Clearly, this can be cleaned up further.
   
   
-  arrivalprob<-function(entity1,entity2){
+  arrivalprob<-function(entity1,entity2,entity1entry,entity2entry){
     
     ent1sort<-entity1[order(as.integer(entity1$created)),]  #Ordering tweets based on arrival time
     ent2sort<-entity2[order(as.integer(entity2$created)),]  #Ordering tweets based on arrival time
@@ -106,13 +106,16 @@ shinyServer(function(input, output) {
     #creating a data frame with arrival probabilities for both univs
     arriveprobent1<-ArrivalProbability(ent1diffcreated,10,1000)
     arriveprobent2<-ArrivalProbability(ent2diffcreated,10,1000)
-    bothdatatimes<-data.frame(Entity1=arriveprobent1, Entity2=arriveprobent2)
+    
+    bothdatatimes<-data.frame(entity1=arriveprobent1, entity2=arriveprobent2)
+    names(bothdatatimes)<-c(entity1entry,entity2entry)# renaming columns to entries from user
+    
     bothdatatimes$time<-c(1:nrow(bothdatatimes)) # creating an index variable
     arrivaldata<-melt(bothdatatimes,id.vars="time") #manipulating data frame to have it ready for ggplot2
-  }
+    }
   
   # A function to create a data frame of delay between tweets, ordered based on arrival time ---Tweak of Stanton's algorithm  
-  DelayTweets<-function(entity1,entity2){
+  DelayTweets<-function(entity1,entity2,entity1entry,entity2entry){
   ###### Few repeated commands below
     ent1sort<-entity1[order(as.integer(entity1$created)),]  #Ordering tweets based on arrival time
     ent2sort<-entity2[order(as.integer(entity2$created)),]  #Ordering tweets based on arrival time
@@ -121,10 +124,10 @@ shinyServer(function(input, output) {
     ent2diffcreated<-as.integer(diff(ent2sort$created))
     
     entity1diff<-data.frame(delay=ent1diffcreated)
-    entity1diff$entity<-c("Entity 1") #creating a factor variable for Entity
+    entity1diff$entity<-c(entity1entry) #creating a factor variable for Entity
     
     entity2diff<-data.frame(delay=ent2diffcreated)
-    entity2diff$entity<-c("Entity 2")#creating a factor variable for Entity
+    entity2diff$entity<-c(entity2entry)#creating a factor variable for Entity
     
     bothentitiesdelay<-rbind(entity1diff,entity2diff) #our data frame
     
@@ -132,7 +135,7 @@ shinyServer(function(input, output) {
   
   # function to calculate number of tweets expected to arrive within a specified time frame - "time" - Tweak of Stanton's code
   
-  numtweetsintime<-function(entity1,entity2,time){
+  numtweetsintime<-function(entity1,entity2,time,entity1entry,entity2entry){
     ###### Few repeated commands below
     ent1sort<-entity1[order(as.integer(entity1()$created)),]  #Ordering tweets based on arrival time
     ent2sort<-entity2[order(as.integer(entity2()$created)),]  #Ordering tweets based on arrival time
@@ -168,10 +171,10 @@ shinyServer(function(input, output) {
     
     # Creating data frames with all required information to create bar graphs of proportion of tweets arriving within specified time---
     #with error bars (confidence intervals) - two separate data frames and then combining the two together
-    dataprop1<-data.frame(Entity="Entity1",NumberTweetsBeforeTime=nument1tweetsbeftime,
+    dataprop1<-data.frame(Entity=entity1entry,NumberTweetsBeforeTime=nument1tweetsbeftime,
                           TotalTweetsRetrieved=nrow(entity1),TimeInSeconds=time,ProportionEstimated=propent1tweetsbeftime,
                           ymin=lowent1,ymax=uppent1)
-    dataprop2<-data.frame(Entity="Entity2",NumberTweetsBeforeTime=nument2tweetsbeftime,
+    dataprop2<-data.frame(Entity=entity2entry,NumberTweetsBeforeTime=nument2tweetsbeftime,
                           TotalTweetsRetrieved=nrow(entity2),TimeInSeconds=time,ProportionEstimated=propent2tweetsbeftime,
                           ymin=lowent2,ymax=uppent2)
     dataprop<-rbind(dataprop1,dataprop2)
@@ -208,8 +211,8 @@ shinyServer(function(input, output) {
     sortedMatrix<-sort(rowSums(tdMatrix),decreasing=TRUE) # calculate row sum of each term and sort in descending order (high freq to low)
     cloudFrame<-data.frame(word=names(sortedMatrix),freq=sortedMatrix)#extracting names from named list in prev command and binding together into a dataframe with frequencies - called cloudFrame, names in separate columns
     
-    wcentity<-wordcloud(cloudFrame$word,cloudFrame$freq,colors=brewer.pal(8,"Dark2"),max.words=100, scale=c(8,1), random.order=TRUE)
-    print(wcentity)
+    wcloudentity<-wordcloud(cloudFrame$word,cloudFrame$freq,max.words=100, colors=brewer.pal(8,"Dark2"),scale=c(8,1), random.order=TRUE)
+    print(wcloudentity)
   }
   
   # To assess the valence of tweets, we use Jeffrey Breen's approach, which was also relied on by 
@@ -261,7 +264,7 @@ shinyServer(function(input, output) {
   
   #calling the above sentiment scoring function using this function below... the text of tweets serve as inputs
   
-  sentimentalanalysis<-function(entity1text,entity2text){
+  sentimentalanalysis<-function(entity1text,entity2text,entity1entry,entity2entry){
 
     # A compiled list of words expressing positive and negative sentiments ----
     #http://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html
@@ -278,8 +281,8 @@ shinyServer(function(input, output) {
     entity2score = score.sentiment(CleanTweets(entity2text),positivewords,negativewords)
     
     # Adding a dummy variable useful for a ggplot
-    entity1score$entity = "Entity 1"
-    entity2score$entity = "Entity 2"
+    entity1score$entity = entity1entry
+    entity2score$entity = entity2entry
 
     #combine all of this
     entityscores<-rbind(entity1score,entity2score)
@@ -293,22 +296,22 @@ shinyServer(function(input, output) {
   entity2<-reactive({entity2<-TweetFrame(input$entity2, input$maxTweets)})
   
   # creating dataframe of arrival probabilities by calling the arrivalprob function
-  arrivaldata<-reactive({arrivaldata<-arrivalprob(entity1(),entity2())})
+  arrivaldata<-reactive({arrivaldata<-arrivalprob(entity1(),entity2(),input$entity1,input$entity2)})
   
   #creating dataframe of delays by calling DelayTweets function
   
-  bothentities<-reactive({bothentities<-DelayTweets(entity1(),entity2())})
+  bothentities<-reactive({bothentities<-DelayTweets(entity1(),entity2(),input$entity1,input$entity2)})
   
   #creating dataframe of proportion of tweets occuring before time- t
   
-  dataprop<-reactive({dataprop<-numtweetsintime(entity1(),entity2(),input$tweettime)})
+  dataprop<-reactive({dataprop<-numtweetsintime(entity1(),entity2(),input$tweettime,input$entity1,input$entity2)})
   
   # Overall Poisson Test to compare Ratio of Proportion of TWeets arriving within the specified time
   
   poiss<-reactive({poisstweetsintime(entity1(),entity2(),input$tweettime)})
   
   #Creating sentiment scores
-  entityscores<-reactive({entityscores<-sentimentalanalysis(entity1()$text,entity2()$text)})
+  entityscores<-reactive({entityscores<-sentimentalanalysis(entity1()$text,entity2()$text,input$entity1,input$entity2)})
   
   #Preparing the output in a series of tabs
   
@@ -316,12 +319,12 @@ shinyServer(function(input, output) {
   #within a particular time t
   
   #number of tweets
-  output$notweets<-renderPrint({numoftweets(entity1()$text,entity2()$text)})
-  
+  output$notweets<-renderPrint({numoftweets(entity1(),entity2(),input$entity1,input$entity2)})
+    
   #See ggtitle below
   output$arrivalprob<-renderPlot({cptplot<-ggplot(arrivaldata(),aes(x=time,y=value,color=variable))+geom_point()+ geom_line()+
                                     labs(y= "Probability", x="Time (t)------>")+ theme(axis.text.y = element_text(color="black"))+
-                                    theme(axis.text.x = element_text(color="black"))+ ggtitle("Probability of a new tweet arriving within a particular time, t")
+                                    theme(axis.text.x = element_text(color="black")) + ggtitle("Probability of a new tweet arriving within a particular time, t")
                                   print(cptplot)})
     
   #tab 2 --- Three plots to understand the distribution of delay time between tweets - A box plot, histogram, and 
@@ -385,7 +388,10 @@ shinyServer(function(input, output) {
   output$sentitailtable<-renderTable({tab<-tail(entityscores(),4)})
   
   #tab 5 - Word Clouds to highlight terms used in tweets associated with the two entities
+  output$entity1wc<-renderText({input$entity1})
   output$entity1wcplot<-renderPlot({wordcloudentity(entity1()$text)})
+                                    
+  output$entity2wc<-renderText({input$entity2})
   output$entity2wcplot<-renderPlot({wordcloudentity(entity2()$text)})
   
   
